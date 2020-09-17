@@ -11,33 +11,44 @@ app.config["MONGO_URI"] = 'mongodb+srv://new_root_dh:r00tUserDh@myfirstcluster-l
 mongo = PyMongo(app)
 
 
+# -------------------------task.html
 @app.route('/')
 @app.route('/get_tasks')
 def get_tasks():
+    """Render the tasks.html (homepage) and finds tasks collection info from the task_manager db"""
     return render_template("tasks.html", tasks=mongo.db.tasks.find())
 
 
+# -------------------------addtask.html
 @app.route('/add_task')
 def add_task():
+    """Render addtask.html and finds the catergories collection info from the task_manager db """
     return render_template("addtask.html", categories=mongo.db.categories.find())
 
-
+# create function
 @app.route('/insert_task', methods=['POST'])
 def insert_task():
+    """takes the form info from the addtask.html template and adds it to the tasks collection in task_manger db(mongo),
+        then rediects back to tasks.html(the get_tasks route)"""
     tasks = mongo.db.tasks
     tasks.insert_one(request.form.to_dict())
     return redirect(url_for('get_tasks'))
 
 
-@app.route('/edit_task/<task_id>')
+# -------------------------edittask.html
+@app.route('/edit_task/<task_id>') #advance routing for the edit button
 def edit_task(task_id):
+    """Render edittask.html and finds both the tasks(one of) and catergories collection info from the task_manager db,
+        to be the preselects on the edit task form"""
     the_task = mongo.db.tasks.find_one({"_id": ObjectId(task_id)})
     all_categories = mongo.db.categories.find()
     return render_template("edittask.html", task=the_task, categories=all_categories)
 
-
-@app.route('/update_task/<task_id>', methods=["POST"])
-def update_task(task_id):
+# update function
+@app.route('/update_task/<task_id>', methods=["POST"]) #advance routing for the edit task button
+def update_task(task_id):  
+    """takes the form info from the edittask.html template and updates the selected tasks_id in task_manger db(mongo),
+        then rediects back to tasks.html(the get_tasks route)"""
     tasks = mongo.db.tasks
     tasks.update({'_id': ObjectId(task_id)},
                  {
@@ -50,8 +61,9 @@ def update_task(task_id):
     return redirect(url_for('get_tasks'))
 
 
-@app.route('/delete_task/<task_id>')
+@app.route('/delete_task/<task_id>') #advance routing for the done button
 def delete_task(task_id):
+    """Removes the tasks data corresponding to the id selected"""
     mongo.db.tasks.remove({'_id': ObjectId(task_id)})
     return redirect(url_for('get_tasks'))
 
